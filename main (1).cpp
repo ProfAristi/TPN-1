@@ -6,11 +6,6 @@
 //=====[Defines]===============================================================
 
 #define NUMBER_OF_KEYS                           4
-#define BLINKING_TIME_GAS_ALARM               1000
-#define BLINKING_TIME_OVER_TEMP_ALARM          500
-#define BLINKING_TIME_GAS_AND_OVER_TEMP_ALARM  100
-#define NUMBER_OF_AVG_SAMPLES                   100
-#define OVER_TEMP_LEVEL                         50
 #define TIME_INCREMENT_MS                       10
 #define DEBOUNCE_KEY_TIME_MS                    40
 #define KEYPAD_NUMBER_OF_ROWS                    4
@@ -33,27 +28,28 @@ typedef struct systemEvent {
 
 //=====[Declaration and initialization of public global objects]===============
 
-DigitalIn alarmTestButton(BUTTON1);
-DigitalIn mq2(PE_12);
+/*DigitalIn (I1);
+DigitalIn (I2);
+DigitalIn (I3);
+DigitalIn (I4);
+DigitalIn (I5);
+DigitalIn (I6);
+DigitalIn (I7);
+DigitalIn (I8);
 
-DigitalOut alarmLed(LED1);
-DigitalOut incorrectCodeLed(LED3);
-DigitalOut systemBlockedLed(LED2);
-
-DigitalInOut sirenPin(PE_10);
+DigitalOut (Q1);
+DigitalOut (Q2);
+DigitalOut (Q3);
+DigitalInOut (Q4);*/
 
 UnbufferedSerial uartUsb(USBTX, USBRX, 115200);
 
-AnalogIn lm35(A1);  
+
 
 DigitalOut keypadRowPins[KEYPAD_NUMBER_OF_ROWS] = {PB_3, PB_5, PC_7, PA_15};
 DigitalIn keypadColPins[KEYPAD_NUMBER_OF_COLS]  = {PB_12, PB_13, PB_15, PC_6};
 
 //=====[Declaration and initialization of public global variables]=============
-
-bool alarmState    = OFF;
-bool incorrectCode = false;
-bool overTempDetector = OFF;
 
 int numberOfIncorrectCodes = 0;
 int numberOfHashKeyReleasedEvents = 0;
@@ -72,11 +68,6 @@ bool SBLastState           = OFF;
 bool gasDetectorState          = OFF;
 bool overTempDetectorState     = OFF;
 
-float potentiometerReading = 0.0;
-float lm35ReadingsAverage  = 0.0;
-float lm35ReadingsSum      = 0.0;
-float lm35ReadingsArray[NUMBER_OF_AVG_SAMPLES];
-float lm35TempC            = 0.0;
 
 int accumulatedDebounceMatrixKeypadTime = 0;
 int matrixKeypadCodeIndex = 0;
@@ -97,9 +88,6 @@ systemEvent_t arrayOfStoredEvents[EVENT_MAX_STORAGE];
 void inputsInit();
 void outputsInit();
 
-void alarmActivationUpdate();
-void alarmDeactivationUpdate();
-
 void uartTask();
 void availableCommands();
 bool areEqual();
@@ -108,10 +96,6 @@ void eventLogUpdate();
 void systemElementStateUpdate( bool lastState,
                                bool currentState,
                                const char* elementName );
-
-float celsiusToFahrenheit( float tempInCelsiusDegrees );
-float analogReadingScaledWithTheLM35Formula( float analogReading );
-void lm35ReadingsArrayInit();
 
 void matrixKeypadInit();
 char matrixKeypadScan();
@@ -123,143 +107,27 @@ int main()
 {
     inputsInit();
     outputsInit();
-    while (true) {
-        alarmActivationUpdate();
-        alarmDeactivationUpdate();
-        uartTask();
-        eventLogUpdate();
-        delay(TIME_INCREMENT_MS);
-    }
+    /*while (true) {
+       
+    }*/
 }
 
 //=====[Implementations of public functions]===================================
 
 void inputsInit()
 {
-    lm35ReadingsArrayInit();
-    sirenPin.mode(OpenDrain);
-    sirenPin.input();
-    matrixKeypadInit();
+ matrixKeypadInit();
 }
 
 void outputsInit()
 {
-    alarmLed = OFF;
-    incorrectCodeLed = OFF;
-    systemBlockedLed = OFF;
+   
+     
 }
 
-void alarmActivationUpdate()
-{
-    static int lm35SampleIndex = 0;
-    int i = 0;
-
-    lm35ReadingsArray[lm35SampleIndex] = lm35.read();
-    lm35SampleIndex++;
-    if ( lm35SampleIndex >= NUMBER_OF_AVG_SAMPLES) {
-        lm35SampleIndex = 0;
-    }
-    
-    lm35ReadingsSum = 0.0;
-    for (i = 0; i < NUMBER_OF_AVG_SAMPLES; i++) {
-        lm35ReadingsSum = lm35ReadingsSum + lm35ReadingsArray[i];
-    }
-    lm35ReadingsAverage = lm35ReadingsSum / NUMBER_OF_AVG_SAMPLES;
-       lm35TempC = analogReadingScaledWithTheLM35Formula ( lm35ReadingsAverage );    
-    
-    if ( lm35TempC > OVER_TEMP_LEVEL ) {
-        overTempDetector = ON;
-    } else {
-        overTempDetector = OFF;
-    }
-
-    if( !mq2) {
-        gasDetectorState = ON;
-        alarmState = ON;
-    }
-    if( overTempDetector ) {
-        overTempDetectorState = ON;
-        alarmState = ON;
-    }
-    if( alarmTestButton ) {             
-        overTempDetectorState = ON;
-        gasDetectorState = ON;
-        alarmState = ON;
-    }
-    if( alarmState ) { 
-        accumulatedTimeAlarm = accumulatedTimeAlarm + TIME_INCREMENT_MS;
-        sirenPin.output();                                     
-        sirenPin = LOW;                                
-
-        if( gasDetectorState && overTempDetectorState ) {
-            if( accumulatedTimeAlarm >= BLINKING_TIME_GAS_AND_OVER_TEMP_ALARM ) {
-                accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
-            }
-        } else if( gasDetectorState ) {
-            if( accumulatedTimeAlarm >= BLINKING_TIME_GAS_ALARM ) {
-                accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
-            }
-        } else if ( overTempDetectorState ) {
-            if( accumulatedTimeAlarm >= BLINKING_TIME_OVER_TEMP_ALARM  ) {
-                accumulatedTimeAlarm = 0;
-                alarmLed = !alarmLed;
-            }
-        }
-    } else{
-        alarmLed = OFF;
-        gasDetectorState = OFF;
-        overTempDetectorState = OFF;
-        sirenPin.input();                                  
-    }
-}
-
-void alarmDeactivationUpdate()
-{
-    if ( numberOfIncorrectCodes < 5 ) {
-        char keyReleased = matrixKeypadUpdate();
-        if( keyReleased != '\0' && keyReleased != '#' ) {
-            keysPressed[matrixKeypadCodeIndex] = keyReleased;
-            if( matrixKeypadCodeIndex >= NUMBER_OF_KEYS ) {
-                matrixKeypadCodeIndex = 0;
-            } else {
-                matrixKeypadCodeIndex++;
-            }
-        }
-        if( keyReleased == '#' ) {
-            if( incorrectCodeLed ) {
-                numberOfHashKeyReleasedEvents++;
-                if( numberOfHashKeyReleasedEvents >= 2 ) {
-                    incorrectCodeLed = OFF;
-                    numberOfHashKeyReleasedEvents = 0;
-                    matrixKeypadCodeIndex = 0;
-                    keysPressed[0] = '0';
-                    keysPressed[1] = '0';
-                    keysPressed[2] = '0';
-                    keysPressed[3] = '0';
-                }
-            } else {
-                if ( alarmState ) {
-                    if ( areEqual() ) {
-                        alarmState = OFF;
-                        numberOfIncorrectCodes = 0;
-                        matrixKeypadCodeIndex = 0;
-                        keysPressed[0] = '0';
-                        keysPressed[1] = '0';
-                        keysPressed[2] = '0';
-                        keysPressed[3] = '0';
-                    } else {
-                        incorrectCodeLed = ON;
-                        numberOfIncorrectCodes++;
-                    }
-                }
-            }
-        }
-    } else {
-        systemBlockedLed = ON;
-    }
-}
+                            
+                    
+ 
 
 void uartTask()
 {
@@ -449,16 +317,16 @@ void uartTask()
 void availableCommands()
 {
     uartUsb.write( "Available commands:\r\n", 21 );
-    uartUsb.write( "Press '1' to get the alarm state\r\n", 34 );
-    uartUsb.write( "Press '2' to get the gas detector state\r\n", 41 );
-    uartUsb.write( "Press '3' to get the over temperature detector state\r\n", 54 );
-    uartUsb.write( "Press '4' to enter the code sequence\r\n", 38 );
+    uartUsb.write( "Press '1' NN\r\n", 34 );
+    uartUsb.write( "Press '2' NN\r\n", 41 );
+    uartUsb.write( "Press '3' NN\r\n", 54 );
+    uartUsb.write( "Press '4'NN\r\n", 38 );
     uartUsb.write( "Press '5' to enter a new code\r\n", 31 );
-    uartUsb.write( "Press 'f' or 'F' to get lm35 reading in Fahrenheit\r\n", 52 );
-    uartUsb.write( "Press 'c' or 'C' to get lm35 reading in Celsius\r\n", 49 );
-    uartUsb.write( "Press 's' or 'S' to set the date and time\r\n", 43 );
-    uartUsb.write( "Press 't' or 'T' to get the date and time\r\n", 43 );
-    uartUsb.write( "Press 'e' or 'E' to get the stored events\r\n\r\n", 45 );
+    uartUsb.write( "Press 'f' or 'F' to NN\r\n", 52 );
+    uartUsb.write( "Press 'c' or 'C' to NN\r\n", 49 );
+    uartUsb.write( "Press 's' or 'S' to NN\r\n", 43 );
+    uartUsb.write( "Press 't' or 'T' to NN\r\n", 43 );
+    uartUsb.write( "Press 'e' or 'E' toNN\r\n\r\n", 45 );
 }
 
 bool areEqual()
@@ -472,24 +340,6 @@ bool areEqual()
     }
 
     return true;
-}
-
-void eventLogUpdate()
-{
-    systemElementStateUpdate( alarmLastState, alarmState, "ALARM" );
-    alarmLastState = alarmState;
-
-    systemElementStateUpdate( gasLastState, !mq2, "GAS_DET" );
-    gasLastState = !mq2;
-
-    systemElementStateUpdate( tempLastState, overTempDetector, "OVER_TEMP" );
-    tempLastState = overTempDetector;
-
-    systemElementStateUpdate( ICLastState, incorrectCodeLed, "LED_IC" );
-    ICLastState = incorrectCodeLed;
-
-    systemElementStateUpdate( SBLastState, systemBlockedLed, "LED_SB" );
-    SBLastState = systemBlockedLed;
 }
 
 void systemElementStateUpdate( bool lastState,
@@ -520,21 +370,7 @@ void systemElementStateUpdate( bool lastState,
     }
 }
 
-float analogReadingScaledWithTheLM35Formula( float analogReading )
-{
-    return ( analogReading * 3.3 / 0.01 );
-}
 
-float celsiusToFahrenheit( float tempInCelsiusDegrees )
-{
-    return ( tempInCelsiusDegrees * 9.0 / 5.0 + 32.0 );
-}
-void lm35ReadingsArrayInit()
-{
-    int i;
-    for( i=0; i<NUMBER_OF_AVG_SAMPLES ; i++ ) {
-        lm35ReadingsArray[i] = 0;
-    }
 }
 
 void matrixKeypadInit()
