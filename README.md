@@ -7,7 +7,8 @@ email:profesor.aristimuno@gmail.com
 
 github cuenta:ProfAristi
 
-Objetivo: Desarrollar un sistema PLC (Controlador Lógico Programable) que me permita automatizar pequeños dispositivos en el aula en colegios secundarios y/o terciarios.
+## Objetivo:
+Desarrollar un sistema PLC (Controlador Lógico Programable) que me permita automatizar pequeños dispositivos en el aula en colegios secundarios y/o terciarios.
 ## Descripción:
 El sistema debe conectarse con distintos Sensores y Actuadores de 24V de CC, en esta 1er etapa se conectarán en forma discreta. 8 entradas Digitales OptoAisladas  y 4 Salidas Relé.
 ## IMPORTANTE
@@ -18,4 +19,4 @@ Periféricos a utilizar 1er Etapa:
 ● ENTRADAS: MARCA OPENMOLO , MODULO DE  8 ENTRADAS DISCRETAS, DIGITALES OPTOAISLADAS
 ● SALIDAS: MODULO 4 SALIDAS RELE
 ● UART: Se utiliza para enviar información de estado del sistema a la PC
-DIAGRAMA EN BLOQUES 
+### DIAGRAMA EN BLOQUES 
