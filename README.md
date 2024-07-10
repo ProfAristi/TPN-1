@@ -20,4 +20,4 @@ Cada un segundo se envía a través del puerto (serie , USB, ethernet) un resume
 -  SALIDAS: MODULO 4 SALIDAS RELE
 -  UART: Se utiliza para enviar información de estado del sistema a la PC
 ### DIAGRAMA EN BLOQUES 
-![](d:\Users\gusta\Desktop\MisDocumentos\CursoSistemaEmbebidos_2024\TPN°1\DIAGRAMA_EN_BLOQUES.jpg)
+![DIAGRAMA EN BLOQUES](d:\Users\gusta\Desktop\MisDocumentos\CursoSistemaEmbebidos_2024\TPN°1\DIAGRAMA_EN_BLOQUES.jpg)
