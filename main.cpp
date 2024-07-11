@@ -61,15 +61,19 @@ char codeSequence[NUMBER_OF_KEYS]   = { '1', '8', '0', '5' };
 char keysPressed[NUMBER_OF_KEYS] = { '0', '0', '0', '0' };
 int accumulatedTimeAlarm = 0;
 
-bool alarmLastState        = OFF;
-bool gasLastState          = OFF;
-bool tempLastState         = OFF;
-bool ICLastState           = OFF;
-bool SBLastState           = OFF;
+bool I1           = OFF;
+bool I2           = OFF;
+bool I3           = OFF;
+bool I4           = OFF;
+bool I5           = OFF;
+bool I6           = OFF;
+bool I7           = OFF;
+bool I8           = OFF;
 
-bool gasDetectorState          = OFF;
-bool overTempDetectorState     = OFF;
-
+bool Q1     = OFF;
+bool Q2     = OFF;
+bool Q3     = OFF;
+bool Q4     = OFF;
 
 int accumulatedDebounceMatrixKeypadTime = 0;
 int matrixKeypadCodeIndex = 0;
