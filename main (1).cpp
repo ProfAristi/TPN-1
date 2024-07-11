@@ -28,19 +28,21 @@ typedef struct systemEvent {
 
 //=====[Declaration and initialization of public global objects]===============
 
-/*DigitalIn (I1);
-DigitalIn (I2);
-DigitalIn (I3);
-DigitalIn (I4);
-DigitalIn (I5);
-DigitalIn (I6);
-DigitalIn (I7);
-DigitalIn (I8);
+/*
+DigitalIn I1();
+DigitalIn I2();
+DigitalIn I3();
+DigitalIn I4();
+DigitalIn I5();
+DigitalIn I6();
+DigitalIn I7();
+DigitalIn I8();
 
-DigitalOut (Q1);
-DigitalOut (Q2);
-DigitalOut (Q3);
-DigitalInOut (Q4);*/
+DigitalOut Q1();
+DigitalOut Q2();
+DigitalOut Q3();
+DigitalInOut Q4();
+*/
 
 UnbufferedSerial uartUsb(USBTX, USBRX, 115200);
 
